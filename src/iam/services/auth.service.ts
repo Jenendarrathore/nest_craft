@@ -4,7 +4,6 @@ import { RoleService } from './role.service';
 import { UserService } from './user.service';
 import { SignUpDto } from '../dtos/sign-up.dto';
 import { ConfigType } from '@nestjs/config';
-import { iamConfig } from '../config/iam.config';
 import { HashingService } from './hashing.service';
 import { SignInDto } from '../dtos/sign-in.dto';
 import { JwtTokenService } from './jwt-token.service';
@@ -13,6 +12,8 @@ import { ForgotPasswordDto } from '../dtos/forgot-password.dto';
 import { randomInt } from 'crypto';
 import { VerifyResetCodeDto } from '../dtos/verify-reset-code.dto';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
+import { EmailService } from 'src/email/services/email.service';
+import { commonConfig } from 'src/common/config/common.config';
 
 @Injectable()
 export class AuthService {
@@ -21,9 +22,10 @@ export class AuthService {
         private readonly rolesService: RoleService,
         private readonly hashingService: HashingService,
         private readonly jwtTokenService: JwtTokenService,
+        private readonly emailService: EmailService,
 
-        @Inject(iamConfig.KEY)
-        private readonly iamConfiguration: ConfigType<typeof iamConfig>,
+        @Inject(commonConfig.KEY)
+        private readonly commonConfiguration: ConfigType<typeof commonConfig>,
 
     ) { }
 
@@ -39,7 +41,7 @@ export class AuthService {
         }
 
         const hashedPassword = await this.hashingService.hash(dto.password);
-        const defaultRoleName = this.iamConfiguration.defaultRole;
+        const defaultRoleName = this.commonConfiguration.defaultRole;
         const defaultRole = await this.rolesService.findByName(defaultRoleName);
         if (!defaultRole) {
             throw new NotFoundException(`Default role "${defaultRoleName}" not found. Seed it before using signup.`);
@@ -163,6 +165,9 @@ export class AuthService {
             otpCode: otpCode,
             otpExpiresAt: otpExpiresAt,
         });
+
+        await this.emailService.sendOtp(email, otpCode);
+
         console.log(`🔐 OTP for ${email}: ${otpCode}`); // 🔧 Replace with actual email later
 
         return { message: 'OTP has been sent to your email.' };
@@ -191,7 +196,7 @@ export class AuthService {
             roles: user.roles.map(role => role.name),
         };
         // Issue short-lived password reset token (e.g. 10 minutes)
-        const token = await this.jwtTokenService.sign(payload,'reset-password','10m');
+        const token = await this.jwtTokenService.sign(payload, 'reset-password', '10m');
 
         // Optional: clear code after verification to prevent reuse
         await this.userService.update(user.id, {

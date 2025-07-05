@@ -4,7 +4,8 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IamModule } from './iam/iam.module';
-import { iamConfig } from './iam/config/iam.config';
+import { EmailModule } from './email/email.module';
+import { commonConfig } from './common/config/common.config';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { iamConfig } from './iam/config/iam.config';
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'dev'}`
     }),
-    ConfigModule.forFeature(iamConfig),
+    ConfigModule.forFeature(commonConfig),
 
     // 🔌 TypeORM Async Config
     TypeOrmModule.forRootAsync({
@@ -29,6 +30,7 @@ import { iamConfig } from './iam/config/iam.config';
       }),
     }),
     IamModule,
+    EmailModule
 
   ],
   controllers: [AppController],

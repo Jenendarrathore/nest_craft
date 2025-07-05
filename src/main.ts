@@ -5,6 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AuthenticationGuard } from './iam/guards/authentication.guard';
 import { RolesGuard } from './iam/guards/roles.guard';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -44,7 +45,26 @@ async function bootstrap() {
   SwaggerModule.setup('/api', app, document)
 
   const reflector = app.get(Reflector);
-  app.useGlobalGuards(new AuthenticationGuard(reflector),  new RolesGuard(reflector));
+  app.useGlobalGuards(new AuthenticationGuard(reflector), new RolesGuard(reflector));
+
+  const rabbitUrl = configService.get<string>('RABBITMQ_URL');
+  const emailQueueName = configService.get<string>('EMAIL_QUEUE_NAME');
+
+  if (!rabbitUrl || !emailQueueName) {
+    throw new Error('RabbitMQ configuration is missing in .env');
+  }
+
+  //
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rabbitUrl],
+      queue: emailQueueName,
+      queueOptions: { durable: true },
+    },
+  });
+
+  await app.startAllMicroservices();
 
   await app.listen(port);
   console.log(`🚀 Server running at http://localhost:${port}/api`);

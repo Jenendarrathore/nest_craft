@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { ConfigType } from '@nestjs/config';
-import { iamConfig } from '../config/iam.config';
+import { commonConfig } from 'src/common/config/common.config';
 
 type TokenType = 'access' | 'refresh' | 'reset-password';
 
@@ -9,8 +9,8 @@ type TokenType = 'access' | 'refresh' | 'reset-password';
 export class JwtTokenService {
     constructor(
         private readonly jwtService: NestJwtService,
-        @Inject(iamConfig.KEY)
-        private readonly config: ConfigType<typeof iamConfig>,
+        @Inject(commonConfig.KEY)
+        private readonly commonConfiguration: ConfigType<typeof commonConfig>,
     ) { }
 
 
@@ -24,16 +24,16 @@ export class JwtTokenService {
 
         switch (type) {
             case 'refresh':
-                secret = this.config.jwt.refreshSecret;
-                expiresIn = expiresInOverride || this.config.jwt.refreshExpiresIn;
+                secret = this.commonConfiguration.jwt.refreshSecret;
+                expiresIn = expiresInOverride || this.commonConfiguration.jwt.refreshExpiresIn;
                 break;
             case 'reset-password':
-                secret = this.config.jwt.resetPasswordSecret; // Add this to config
+                secret = this.commonConfiguration.jwt.resetPasswordSecret; // Add this to commonConfiguration
                 expiresIn = expiresInOverride || '10m';
                 break;
             default:
-                secret = this.config.jwt.accessSecret;
-                expiresIn = expiresInOverride || this.config.jwt.accessExpiresIn;
+                secret = this.commonConfiguration.jwt.accessSecret;
+                expiresIn = expiresInOverride || this.commonConfiguration.jwt.accessExpiresIn;
         }
 
         return this.jwtService.signAsync(payload, {
@@ -50,13 +50,13 @@ export class JwtTokenService {
 
         switch (type) {
             case 'refresh':
-                secret = this.config.jwt.refreshSecret;
+                secret = this.commonConfiguration.jwt.refreshSecret;
                 break;
             case 'reset-password':
-                secret = this.config.jwt.resetPasswordSecret;
+                secret = this.commonConfiguration.jwt.resetPasswordSecret;
                 break;
             default:
-                secret = this.config.jwt.accessSecret;
+                secret = this.commonConfiguration.jwt.accessSecret;
         }
 
         return this.jwtService.verifyAsync<T>(token, { secret });

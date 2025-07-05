@@ -13,19 +13,20 @@ import { HashingService } from './services/hashing.service';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
 import { ConfigModule, ConfigType } from '@nestjs/config';
-import { iamConfig } from './config/iam.config';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtTokenService } from './services/jwt-token.service';
 import { RolesGuard } from './guards/roles.guard';
+import { EmailModule } from 'src/email/email.module';
+import { commonConfig } from 'src/common/config/common.config';
 
 @Module({
     imports: [
         ConfigModule,
-        ConfigModule.forFeature(iamConfig),
+        ConfigModule.forFeature(commonConfig),
         JwtModule.registerAsync({
-            imports: [ConfigModule, ConfigModule.forFeature(iamConfig)],
-            inject: [iamConfig.KEY],
-            useFactory: (config: ConfigType<typeof iamConfig>) => ({
+            imports: [ConfigModule, ConfigModule.forFeature(commonConfig)],
+            inject: [commonConfig.KEY],
+            useFactory: (config: ConfigType<typeof commonConfig>) => ({
                 secret: config.jwt.accessSecret,
                 signOptions: {
                     expiresIn: config.jwt.accessExpiresIn,
@@ -34,7 +35,8 @@ import { RolesGuard } from './guards/roles.guard';
         }),
 
         TypeOrmModule.forFeature([User]),
-        TypeOrmModule.forFeature([Role])
+        TypeOrmModule.forFeature([Role]),
+        EmailModule
     ],
     controllers: [UserController, RoleController, AuthController],
     providers: [AuthenticationGuard, RolesGuard,JwtStrategy, UserService, RoleService, AuthService, HashingService, JwtTokenService],

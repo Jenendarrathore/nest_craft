@@ -78,13 +78,30 @@ CREATE DATABASE nest_craft WITH OWNER = admin
 
 ### 8.🧪 Install Swagger to document all Apis and setup
 
+
+
 #### 1. Install Package
 npm install --save @nestjs/swagger swagger-ui-express
 
 #### 2. Setup Swagger in main.ts
-use DocumentBuilder()
+const config = new DocumentBuilder()
+  .addBearerAuth({
+    description: 'JWT Token',
+    name: 'Authorization',
+    bearerFormat: 'JWT',
+    scheme: 'bearer',
+    type: 'http',
+    in: 'header',
+  }, 'jwt')
+  .build();
 
-### 8. Generate users module
+  Use @ApiBearerAuth('jwt') in controllers.
+
+const document = SwaggerModule.createDocument(app, config);
+SwaggerModule.setup('/api', app, document)
+
+
+### 9. Generate users module
 nest g module users
 nest g service users
 nest g controller users
@@ -96,7 +113,7 @@ src/
     ├── users.service.ts
     ├── users.controller.ts
 
-### 9. Generate auth module
+### 10. Generate auth module
 nest g module auth
 nest g service auth
 nest g controller auth
@@ -109,8 +126,14 @@ src/
     ├── auth.controller.ts
 
 
-### 10. Create Controllers , services , entites ,dtos folder for every module 
+### 11. Create Controllers , services , entites ,dtos folder for every module 
 src/users/controllers/users.controller.ts
 src/users/services/users.service.ts
 src/users/entities/users.entity.ts
 
+
+### 12. Create Role Entity, Service, Controller
+
+### 13. JWT Authentication  refer the jwt-implementation.md 
+
+### 14. Authentication Flow refer the MD autherization-flow.md
