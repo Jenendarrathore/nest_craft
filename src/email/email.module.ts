@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
-import { EmailController } from './controllers/email.controller';
-import { EmailService } from './services/email.service';
-import { DirectMailerService } from './services/direct-mailer.service';
+import { DirectMailService } from './services/direct-mail.service';
 import { commonConfig } from 'src/common/config/common.config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { EmailLog } from './entities/email-log.entity';
+import { EmailLogService } from './services/email-log.service';
+import { EmailService } from './services/email.service';
+import { EmailQueueListener } from './listeners/email.listener';
+import { EmailQueueProducer } from './queues/email.producer';
 
 @Module({
   imports: [
@@ -27,11 +31,12 @@ import { commonConfig } from 'src/common/config/common.config';
             }
           }),
       }
-    ])
+    ]),
+    TypeOrmModule.forFeature([EmailLog])
   ],
 
-  controllers: [EmailController],
-  providers: [EmailService, DirectMailerService],
-  exports: [EmailService],
+  controllers: [EmailQueueListener],
+  providers: [EmailService, DirectMailService, EmailQueueProducer,EmailLogService],
+  exports: [EmailService,EmailLogService],
 })
 export class EmailModule { }

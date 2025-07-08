@@ -49,6 +49,7 @@ async function bootstrap() {
 
   const rabbitUrl = configService.get<string>('RABBITMQ_URL');
   const emailQueueName = configService.get<string>('EMAIL_QUEUE_NAME');
+  const emailQueueDlqName =  configService.get<string>('EMAIL_QUEUE_DLQ_NAME');
 
   if (!rabbitUrl || !emailQueueName) {
     throw new Error('RabbitMQ configuration is missing in .env');
@@ -60,7 +61,14 @@ async function bootstrap() {
     options: {
       urls: [rabbitUrl],
       queue: emailQueueName,
-      queueOptions: { durable: true },
+      queueOptions: {
+        durable: true,
+        arguments: {
+          'x-dead-letter-exchange': '', // default exchange
+          'x-dead-letter-routing-key': emailQueueDlqName, // fallback queue
+        },
+      },
+
     },
   });
 

@@ -1,29 +1,49 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { DirectMailerService } from './direct-mailer.service';
-import { ConfigType } from '@nestjs/config';
-import { commonConfig } from 'src/common/config/common.config';
+// src/email/services/email.service.ts
+
+import { Injectable, Logger } from '@nestjs/common';
+import { DirectMailService } from './direct-mail.service';
+import { EmailQueueProducer } from '../queues/email.producer';
+
+export interface EmailSendPayload {
+    to: string;
+    subject: string;
+    type: string; // template name without `.hbs`
+    context: Record<string, any>;
+    correlationId?: string;
+}
 
 @Injectable()
 export class EmailService {
-  private readonly useQueue: boolean;
+    private readonly logger = new Logger(EmailService.name);
+    private readonly useQueue = process.env.USE_RABBITMQ_EMAIL === 'true';
 
-  constructor(
-    private readonly directMailer: DirectMailerService,
-    @Inject('EMAIL_SERVICE') private readonly client: ClientProxy,
+    constructor(
+        private readonly directMailer: DirectMailService,
+        private readonly emailQueueProducer: EmailQueueProducer
+    ) { }
 
-    @Inject(commonConfig.KEY)
-    private readonly commonConfiguration: ConfigType<typeof commonConfig>,
+    async sendEmail(payload: EmailSendPayload): Promise<void> {
+        const { to, subject, type, context, correlationId } = payload;
 
-  ) {
-    this.useQueue = this.commonConfiguration.rabbitmq.useRabbitmqEmail === 'true';
-  }
-
-  async sendOtp(to: string, otp: string): Promise<void> {
-    if (this.useQueue) {
-      this.client.emit('send_otp_email', { to, otp });
-    } else {
-      await this.directMailer.sendOtpEmail(to, otp);
+        if (this.useQueue) {
+            this.logger.log(`📤 Publishing email to RabbitMQ: ${to} [${type}]`);
+            await this.emailQueueProducer.publish({
+                to,
+                subject,
+                type,
+                context,
+                correlationId,
+            });
+        } else {
+            this.logger.log(`📧 Sending email directly (no queue): ${to} [${type}]`);
+            await this.directMailer.send({
+                to,
+                subject,
+                type,
+                context,
+                correlationId,
+            });
+        }
     }
-  }
+
 }

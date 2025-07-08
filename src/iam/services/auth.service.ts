@@ -12,8 +12,9 @@ import { ForgotPasswordDto } from '../dtos/forgot-password.dto';
 import { randomInt } from 'crypto';
 import { VerifyResetCodeDto } from '../dtos/verify-reset-code.dto';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
-import { EmailService } from 'src/email/services/email.service';
+import { EmailSendPayload, EmailService } from 'src/email/services/email.service';
 import { commonConfig } from 'src/common/config/common.config';
+import { EmailType } from 'src/email/constants/email-type.enum';
 
 @Injectable()
 export class AuthService {
@@ -166,7 +167,21 @@ export class AuthService {
             otpExpiresAt: otpExpiresAt,
         });
 
-        await this.emailService.sendOtp(email, otpCode);
+
+        const emailPayload: EmailSendPayload = {
+            to: email,
+            type: EmailType.OTP,
+            subject: "Reset Password Otp",
+            context: { otp: otpCode } // variables to render in template
+        }
+
+
+        await this.emailService.sendEmail({
+            to: email,
+            subject: "Reset Password Otp",
+            type: 'otp', // this maps to `otp.hbs` template
+            context: { otp: otpCode },
+        });
 
         console.log(`🔐 OTP for ${email}: ${otpCode}`); // 🔧 Replace with actual email later
 
