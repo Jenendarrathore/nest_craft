@@ -13,7 +13,9 @@ export const commonConfig = registerAs('common', () => ({
   rabbitmq: {
     useRabbitmqEmail: process.env.USE_RABBITMQ_EMAIL || "",
     rabbitmqUrl: process.env.RABBITMQ_URL || "",
-    emailQueueName: process.env.EMAIL_QUEUE_NAME || ""
+    emailQueueName: process.env.EMAIL_QUEUE_NAME || "",
+    emailQueueDlqName: process.env.EMAIL_QUEUE_DLQ_NAME || ""
+    
   }
 
 }));

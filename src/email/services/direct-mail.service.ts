@@ -59,13 +59,15 @@ export class DirectMailService {
         sentAt: new Date(),
         providerResponseId: result.messageId,
       });
+      return "success"
     } catch (error) {
       await this.emailLogService.update(log.id, {
         status: 'FAILED',
         error: error.message,
       });
       this.logger.error(`Failed to send email to ${to}`, error.stack);
-      throw new InternalServerErrorException('Failed to send email');
+      return "failure"
+      // throw new InternalServerErrorException('Failed to send email');
     }
   }
 }

@@ -170,18 +170,13 @@ export class AuthService {
 
         const emailPayload: EmailSendPayload = {
             to: email,
-            type: EmailType.OTP,
+            type: "EmailType.OTP",
             subject: "Reset Password Otp",
             context: { otp: otpCode } // variables to render in template
         }
 
 
-        await this.emailService.sendEmail({
-            to: email,
-            subject: "Reset Password Otp",
-            type: 'otp', // this maps to `otp.hbs` template
-            context: { otp: otpCode },
-        });
+        await this.emailService.sendEmail(emailPayload);
 
         console.log(`🔐 OTP for ${email}: ${otpCode}`); // 🔧 Replace with actual email later
 

@@ -49,7 +49,7 @@ async function bootstrap() {
 
   const rabbitUrl = configService.get<string>('RABBITMQ_URL');
   const emailQueueName = configService.get<string>('EMAIL_QUEUE_NAME');
-  const emailQueueDlqName =  configService.get<string>('EMAIL_QUEUE_DLQ_NAME');
+  const emailQueueDlqName = configService.get<string>('EMAIL_QUEUE_DLQ_NAME');
 
   if (!rabbitUrl || !emailQueueName) {
     throw new Error('RabbitMQ configuration is missing in .env');
@@ -68,11 +68,33 @@ async function bootstrap() {
           'x-dead-letter-routing-key': emailQueueDlqName, // fallback queue
         },
       },
-
+      noAck: false
     },
   });
 
-  await app.startAllMicroservices();
+  // 🆕 Declare DLQ queue
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rabbitUrl],
+      queue: emailQueueDlqName, // 'email_queue_nest_craft_dl'
+      queueOptions: {
+        durable: true,
+      },
+      noAck: false,
+      // socketOptions: {
+      //   heartbeatIntervalInSeconds: 60,
+      // },
+    },
+  });
+
+
+  // Start microservices before HTTP server
+  await app.startAllMicroservices().then(() => {
+    console.log('Microservices started');
+  }).catch(err => {
+    console.error('Failed to start microservices:', err);
+  });
 
   await app.listen(port);
   console.log(`🚀 Server running at http://localhost:${port}/api`);

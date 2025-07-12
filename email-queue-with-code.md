@@ -79,7 +79,13 @@ import { EmailController } from './controllers/email.controller';
           options: {
             urls: [config.get('RABBITMQ_URL')],
             queue: config.get('EMAIL_QUEUE_NAME'),
-            queueOptions: { durable: true },
+          queueOptions: {
+          durable: true,
+          arguments: {
+            'x-dead-letter-exchange': '',
+            'x-dead-letter-routing-key': config.get('EMAIL_QUEUE_DLQ_NAME'),
+          },
+        },
           },
         }),
       },

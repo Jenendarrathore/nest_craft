@@ -27,6 +27,10 @@ import { EmailQueueProducer } from './queues/email.producer';
               queue: config.rabbitmq.emailQueueName,         // ✅ always a string
               queueOptions: {
                 durable: true,
+                arguments: {
+                  'x-dead-letter-exchange': '',
+                  'x-dead-letter-routing-key': config.rabbitmq.emailQueueDlqName,
+                }
               },
             }
           }),
@@ -36,7 +40,12 @@ import { EmailQueueProducer } from './queues/email.producer';
   ],
 
   controllers: [EmailQueueListener],
-  providers: [EmailService, DirectMailService, EmailQueueProducer,EmailLogService],
-  exports: [EmailService,EmailLogService],
+  providers: [
+    EmailService,
+    DirectMailService,
+    EmailQueueProducer,
+    EmailLogService
+  ],
+  exports: [EmailService, EmailLogService],
 })
 export class EmailModule { }

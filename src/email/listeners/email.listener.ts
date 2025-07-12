@@ -4,7 +4,7 @@ import { DirectMailService } from '../services/direct-mail.service';
 import { EmailLogService } from '../services/email-log.service';
 
 const DEFAULT_QUEUE = process.env.EMAIL_QUEUE_NAME || 'email_queue_nest_craft';
-const DLQ_QUEUE = process.env.EMAIL_QUEUE_DLQ_NAME || 'email_queue_nest_craft_dlq';
+const DLQ_QUEUE = process.env.EMAIL_QUEUE_DLQ_NAME || 'email_queue_nest_craft_dl';
 
 @Controller()
 export class EmailQueueListener {
@@ -31,12 +31,33 @@ export class EmailQueueListener {
     const message = context.getMessage();
 
     try {
+      // 1. Verify channel is valid before processing
+      if (this.isChannelInvalid(channel)) {
+        throw new Error('Invalid RabbitMQ channel');
+      }
+
       this.logger.log(`📥 Received email job for ${data.to}`);
-      await this.directMailer.send(data);
-      channel.ack(message); // ✅ Acknowledge successful processing
+      const result = await this.directMailer.send(data);
+      if (result === "failure") {
+        channel.nack(message, false, false);
+
+      } else {
+        // Verify channel is still open before ack
+        if (!channel.connection.closed) {
+          channel.ack(message);
+        } else {
+          this.logger.error('Cannot ack - channel closed');
+        }
+      }
+
     } catch (err) {
       this.logger.error(`❌ Failed to send email to ${data.to}: ${err.message}`);
-      channel.nack(message, false, false); // ✅ Push to DLQ
+      // Verify channel is still open before nack
+      if (!channel.connection.closed) {
+        channel.nack(message, false, false);
+      } else {
+        this.logger.error('Cannot nack - channel closed');
+      }
     }
   }
 
@@ -69,4 +90,12 @@ export class EmailQueueListener {
 
     channel.ack(message); // Acknowledge that we’ve handled it (even if only logging)
   }
+
+  private isChannelInvalid(channel: any): boolean {
+    return !channel ||
+      channel.connection.closed ||
+      channel.closed ||
+      !channel.connection;
+  }
+
 }

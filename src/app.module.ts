@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { IamModule } from './iam/iam.module';
 import { EmailModule } from './email/email.module';
 import { commonConfig } from './common/config/common.config';
+import { InternalTestModule } from './internal-test/internal-test.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { commonConfig } from './common/config/common.config';
       }),
     }),
     IamModule,
-    EmailModule
+    EmailModule,
+    InternalTestModule
 
   ],
   controllers: [AppController],

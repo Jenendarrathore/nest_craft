@@ -22,7 +22,17 @@ export class EmailQueueProducer {
     type: string;
     context: Record<string, any>;
     correlationId?: string;
+    // Optional retry support
+    retryCount?: number;
+    retryInterval?: number;
+
   }) {
-    await this.client.emit(this.emailQueueName, payload);
+    const message = {
+    ...payload,
+    retryCount: payload.retryCount ?? 3,          // Default: 3 retries
+    retryInterval: payload.retryInterval ?? 2000, // Default: 2s delay
+  };
+
+    await this.client.emit(this.emailQueueName, message);
   }
 }

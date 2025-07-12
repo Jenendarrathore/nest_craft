@@ -8,6 +8,7 @@ import {
   JoinTable,
 } from 'typeorm';
 import { Role } from './role.entity';
+import { CommonEntity } from 'src/common/base/common.entity';
 
 
 export enum UserStatus {
@@ -17,9 +18,7 @@ export enum UserStatus {
 }
 
 @Entity('users')
-export class User {
-  @PrimaryGeneratedColumn({ type: 'integer' })
-  id: number
+export class User  extends CommonEntity{
 
   @Column({ unique: true })
   username: string;
@@ -77,11 +76,4 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   refreshTokenIssuedAt: Date | null;
-
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }
