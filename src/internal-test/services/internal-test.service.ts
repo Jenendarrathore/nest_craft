@@ -2,7 +2,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BaseHelperService } from 'src/common/base/base-helper.service';
+import { BaseHelperService } from 'src/common/services/base-helper.service';
 import { Repository } from 'typeorm';
 import { InternalTestEntity } from '../entities/internal-test.entity';
 import { BasicFilterQueryDto, SoftDeleteFilter } from 'src/common/query/dtos/basic-filter-query.dto';
@@ -16,24 +16,24 @@ export class InternalTestService {
   ) { }
 
   async runTest() {
-    const qb = this.repo.createQueryBuilder('internal_test');
+    const qb = this.repo.createQueryBuilder('entity');
 
     const query: BasicFilterQueryDto = {
       // ✅ Nested filters + $or + $and logic
-      filters: {
-        $and: [{
-          // name: { $containsi: 'john' },
-          $or: [
-            { age: { $lt: 25 } },
-            { isActive: { $eq: true } },
-          ],
-          $and: [
-            { status: { $in: ['active', 'draft'] } },
-            { bio: { $notContainsi: 'retired' } },
-          ],
-          createdAt: { $between: ['2023-01-01', '2026-01-01'] },
-        }]
-      },
+      // filters: {
+      //   $and: [{
+      //     // name: { $containsi: 'john' },
+      //     $or: [
+      //       { age: { $lt: 25 } },
+      //       { isActive: { $eq: true } },
+      //     ],
+      //     $and: [
+      //       { status: { $in: ['active', 'draft'] } },
+      //       { bio: { $notContainsi: 'retired' } },
+      //     ],
+      //     createdAt: { $between: ['2023-01-01', '2026-01-01'] },
+      //   }]
+      // },
 
       // ✅ Soft delete filtering
       showSoftDeleted: SoftDeleteFilter.INCLUSIVE, // Only non-deleted
@@ -48,7 +48,7 @@ export class InternalTestService {
       // groupBy: ['status', 'isActive'],
 
       // ✅ Populate relations (if your entity has any)
-      // populate: ['user'],
+      populate: ['user'],
 
       // ✅ Populate media fields (e.g., avatar, coverImage)
       // populateMedia: ['avatar', 'coverImage'],
@@ -79,9 +79,8 @@ export class InternalTestService {
     };
 
 
-    this.helper.buildFilterQuery(qb, query, 'internal_test');
+    this.helper.buildFilterQuery(qb, query, 'entity');
 
-    console.log(qb.getSql());
     return qb.getMany();
   }
 }

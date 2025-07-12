@@ -37,7 +37,7 @@ import { InternalTestModule } from './internal-test/internal-test.module';
   ],
   controllers: [AppController],
   providers: [
-    AppService
+    AppService,
   ],
 })
 export class AppModule { }

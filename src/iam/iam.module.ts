@@ -18,6 +18,7 @@ import { JwtTokenService } from './services/jwt-token.service';
 import { RolesGuard } from './guards/roles.guard';
 import { EmailModule } from 'src/email/email.module';
 import { commonConfig } from 'src/common/config/common.config';
+import { CommonModule } from 'src/common/common.module';
 
 @Module({
     imports: [
@@ -36,7 +37,8 @@ import { commonConfig } from 'src/common/config/common.config';
 
         TypeOrmModule.forFeature([User]),
         TypeOrmModule.forFeature([Role]),
-        EmailModule
+        EmailModule,
+        CommonModule
     ],
     controllers: [UserController, RoleController, AuthController],
     providers: [AuthenticationGuard, RolesGuard,JwtStrategy, UserService, RoleService, AuthService, HashingService, JwtTokenService],

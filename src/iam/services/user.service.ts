@@ -3,13 +3,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from '../dtos/update-user.dto';
+import { CommonService } from 'src/common/services/common.service';
+import { BaseHelperService } from 'src/common/services/base-helper.service';
 
 @Injectable()
-export class UserService {
+export class UserService extends CommonService<User> {
   constructor(
     @InjectRepository(User)
-    private readonly repo: Repository<User>,
-  ) { }
+    readonly repo: Repository<User>,
+    readonly helper: BaseHelperService,
+  ) {
+    super(repo, helper); // pass both to the base constructor
+  }
+
 
   async isEmailTaken(email: string): Promise<boolean> {
     const user = await this.repo.findOne({ where: { email } });
